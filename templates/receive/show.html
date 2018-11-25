@@ -1,0 +1,197 @@
+﻿<!DOCTYPE HTML>
+{% load staticfiles %}
+<html>
+<head>
+    <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
+    <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script type="text/javascript">
+        window.onload = function () {
+            $(document).ready(function () {
+
+                var dps1 = [];
+                var dps2 = [];
+                var dps3 = [];
+    
+
+                var chart1 = new CanvasJS.Chart("chartContainer1", {
+                    title: {
+                        text: "Sound"
+                    },
+                    axisX: {
+                        title: "Time"
+                    },
+                    axisY: {
+                        title: "Sound"
+                    },
+                    data: [{
+                        type: "line",
+                        dataPoints: dps1
+                    }]
+                });
+                var chart2 = new CanvasJS.Chart("chartContainer2", {
+                    title: {
+                        text: "Current"
+                    },
+                    axisX: {
+                        title: "Time"
+                    },
+                    axisY: {
+                        title: "Current"
+                    },
+                    data: [{
+                        type: "line",
+                        dataPoints: dps2
+                    }]
+                });
+                var chart3 = new CanvasJS.Chart("chartContainer3", {
+                    title: {
+                        text: "Voltage"
+                    },
+                    axisX: {
+                        title: "Time"
+                    },
+                    axisY: {
+                        title: "Voltage"
+                    },
+                    data: [{
+                        type: "line",
+                        dataPoints: dps3
+                    }]
+                });
+
+                chart1.render();
+                chart2.render();
+                chart3.render();
+                var xVal1 = 0;
+                var yVal1 = 0;
+                var updateInterval1 = 1000;
+                var pid1 = 1;
+                var data1 = 0;
+                var xVal2 = 0;
+                var yVal2 = 0;
+                var updateInterval2 = 1000;
+                var pid2 = 1;
+                var xVal3 = 0;
+                var yVal3 = 0;
+                var updateInterval3 = 1000;
+                var pid3 = 1;
+
+                var updateChart1 = function () {
+                    pid1 = xVal1.toString()
+                    $.get('/receive/sound_refresh/', { currentid: pid1 }, function (jdata) {
+                        var tmpdata;
+                        tmpdata = JSON.parse(jdata);
+                        for (var i = 0; i < 100; ++i)
+                        {
+                            xVal1++;
+                            yVal1 = tmpdata[i];
+                            dps1.push({ x: xVal1, y: yVal1 });
+                            
+                        }
+                    });
+                    if (dps1.length > 500) {
+                        dps1.shift();
+                    }
+                    xVal1++;
+                    chart1.render();
+
+                    // update chart after specified time.
+
+                };
+                var updateChart2 = function () {
+                    pid2 = xVal2.toString()
+                    $.get('/receive/current_refresh/', { currentid: pid2 }, function (jdata) {
+                        var tmpdata;
+                        tmpdata = JSON.parse(jdata);
+                        for (var i = 0; i < 100; ++i) {
+                            xVal2++;
+                            yVal2 = tmpdata[i];
+                            dps2.push({ x: xVal2, y: yVal2 });
+                            
+                        }
+                    });
+                    xVal2++;
+                    if (dps2.length > 500) {
+                        dps2.shift();
+                    }
+
+                    chart2.render();
+
+                    // update chart after specified time.
+
+                };
+                var updateChart3 = function () {
+                    pid3 = xVal3.toString()
+                    $.get('/receive/voltage_refresh/', { currentid: pid3 }, function (jdata) {
+                        var tmpdata;
+                        tmpdata = JSON.parse(jdata);
+                        for (var i = 0; i < 100; ++i) {
+                            xVal3++;
+                            yVal3 = tmpdata[i];
+                            dps3.push({ x: xVal3, y: yVal3 });
+                            
+                        }
+                    });
+                    xVal3++;
+                    if (dps3.length > 500) {
+                        dps3.shift();
+                    }
+
+                    chart3.render();
+
+                    // update chart after specified time.
+
+                };
+
+                setInterval(function () { updateChart1() }, updateInterval1);
+                setInterval(function () { updateChart2() }, updateInterval2);
+                setInterval(function () { updateChart3() }, updateInterval3);
+            })
+        }
+        tmp4 = 1;
+        pid4 = '1';
+        setInterval(function () {
+            $.get('/receive/image_refresh/', { currentid: pid4 }, function (jdata) {
+                var img = document.getElementById("image");
+                var data;
+                data = JSON.parse(jdata);
+                //console.log(data['image']);
+                img.src = "data: image/jpg; base64," + data['image']
+            });
+            tmp4 = tmp4 + 1;
+            pid4 = tmp4.toString();
+        }, 1000)
+        tmp5 = 0;
+        pid5 = '0';
+        setInterval(function () {
+            $.get('/receive/robot_refresh/', { currentid: pid5 }, function (jdata) {
+                var div = document.getElementById("divid");
+                var data;
+                data = JSON.parse(jdata);
+                //console.log(data['image']);
+                div.innerHTML = '<p>' + data['robot'] + '</p>';
+            });
+            tmp5 = tmp5 + 1;
+            pid5 = tmp5.toString();
+        }, 1000)
+    </script>
+</head>
+<body>
+    <div style="width:2000px">
+    <div style="width:700px;height:400px;margin:0 auto;display:inline-block" >
+        <img id="image" src=" " style="width:600px;height:400px;margin:0 auto;">
+    </div>
+    <div style="width:700px;height:400px;margin:0 auto;display:inline-block;" id="divid">
+
+    </div>
+    </div>
+    <div id="chartContainer1" style="height: 400px; width: 1400px;">
+    </div>
+    <div id="chartContainer2" style="height: 400px; width: 1400px;">
+    
+    </div>
+    <div id="chartContainer3" style="height: 400px; width: 1400px;">
+    
+    </div>
+</body>
+</html>
